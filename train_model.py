@@ -59,37 +59,23 @@ def preprocess_data(train, test):
 
 
 def train_model(X_train, y_train, X_val, y_val):
-    """Train XGBoost model with simple hyperparameters."""
+    """Train Gradient Boosting model with simple hyperparameters."""
     print("\nTraining model...")
     
-    # Simple XGBoost parameters - start basic, tune later
-    params = {
-        'objective': 'reg:squarederror',
-        'eval_metric': 'mae',
-        'tree_method': 'hist',
-        'random_state': 42,
-        'n_estimators': 100,  # Start small, increase later
-        'max_depth': 6,
-        'learning_rate': 0.1,
-        'subsample': 0.8,
-        'colsample_bytree': 0.8,
-        'min_child_weight': 1,
-    }
-    
-    # Create DMatrix for XGBoost
-    dtrain = xgb.DMatrix(X_train, label=y_train)
-    dval = xgb.DMatrix(X_val, label=y_val)
-    
-    # Train with early stopping
-    evals = [(dtrain, 'train'), (dval, 'val')]
-    model = xgb.train(
-        params,
-        dtrain,
-        num_boost_round=params['n_estimators'],
-        evals=evals,
-        early_stopping_rounds=10,
-        verbose_eval=50
+    # Simple Gradient Boosting parameters - start basic, tune later
+    model = GradientBoostingRegressor(
+        n_estimators=100,  # Start small, increase later
+        max_depth=6,
+        learning_rate=0.1,
+        subsample=0.8,
+        min_samples_split=2,
+        min_samples_leaf=1,
+        random_state=42,
+        verbose=1
     )
+    
+    # Train model
+    model.fit(X_train, y_train)
     
     return model
 
@@ -97,8 +83,7 @@ def train_model(X_train, y_train, X_val, y_val):
 def evaluate_model(model, X_val, y_val):
     """Evaluate model on validation set."""
     print("\nEvaluating model...")
-    dval = xgb.DMatrix(X_val)
-    y_pred = model.predict(dval)
+    y_pred = model.predict(X_val)
     mae = mean_absolute_error(y_val, y_pred)
     print(f"Validation MAE: {mae:.4f}")
     return mae
@@ -107,8 +92,7 @@ def evaluate_model(model, X_val, y_val):
 def make_predictions(model, X_test):
     """Make predictions on test set."""
     print("\nMaking predictions on test set...")
-    dtest = xgb.DMatrix(X_test)
-    predictions = model.predict(dtest)
+    predictions = model.predict(X_test)
     return predictions
 
 
